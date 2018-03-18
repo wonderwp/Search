@@ -1,0 +1,33 @@
+{
+    "name": "wonderwp/search",
+    "type": "library",
+    "description": "WonderWp Search Component",
+    "keywords": ["search"],
+    "homepage": "https://wonderwp.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jeremy Desvaux",
+            "homepage": "http://jdmweb.com"
+        },
+        {
+            "name": "WonderWp Community",
+            "homepage": "https://wonderwp.com/contributors"
+        }
+    ],
+    "require": {
+        "php": "~5.6|~7"
+    },
+    "require-dev": {
+        "wonderwp/dependency-injection": "dev-develop@dev",
+        "wonderwp/media": "dev-develop@dev",
+        "johnpbloch/wordpress": "^4.7"
+    },
+    "autoload": {
+        "psr-4": {"WonderWp\\Component\\Search\\": "src"},
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "minimum-stability": "dev"
+}
