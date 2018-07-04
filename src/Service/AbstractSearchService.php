@@ -2,14 +2,16 @@
 
 namespace WonderWp\Component\Search\Service;
 
-abstract class AbstractSearchService implements SearchServiceInterface
+use WonderWp\Component\Service\AbstractService;
+
+abstract class AbstractSearchService extends AbstractService implements SearchServiceInterface
 {
     /**
      * @var string
      */
     protected $name;
 
-    /** @inheritdoc*/
+    /** @inheritdoc */
     public function setName($name)
     {
         $this->name = $name;
@@ -17,13 +19,13 @@ abstract class AbstractSearchService implements SearchServiceInterface
         return $this;
     }
 
-    /** @inheritdoc*/
+    /** @inheritdoc */
     public function getName()
     {
         return $this->name;
     }
 
-    /** @inheritdoc*/
+    /** @inheritdoc */
     abstract function getMarkup($query, array $opts = []);
 
 }
