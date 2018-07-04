@@ -4,6 +4,7 @@ namespace WonderWp\Component\Search\Service;
 
 use WonderWp\Component\DependencyInjection\Container;
 use WonderWp\Component\Media\Medias;
+use WonderWp\Component\PluginSkeleton\AbstractManager;
 use WonderWp\Component\Search\Result\SearchResultInterface;
 
 abstract class AbstractPostSearchService extends AbstractSetSearchService
@@ -15,8 +16,12 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
      */
     protected $wpdb;
 
-    public function __construct()
-    {
+    /**
+     * @inheritDoc
+     */
+    public function __construct(AbstractManager $manager = null) {
+        parent::__construct($manager);
+
         global $wpdb;
         $this->wpdb = $wpdb;
     }
