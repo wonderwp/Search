@@ -17,8 +17,8 @@
     ],
     "require": {
         "php": "~5.6|~7",
-        "wonderwp/dependency-injection": "dev-develop@dev",
-        "wonderwp/media": "dev-develop@dev"
+        "wonderwp/dependency-injection": "^1.0",
+        "wonderwp/media": "^1.0"
     },
     "require-dev": {
         "johnpbloch/wordpress": "^4.7"
