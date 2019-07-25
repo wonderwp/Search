@@ -70,44 +70,40 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
     protected function getQuerySql($searchText, $postTypes = [], $action = "SELECT")
     {
         global $wpdb;
+        $queryStr = NULL;
 
-        if ($action == 'COUNT') {
-            $queryStr = "SELECT COUNT(*) as cpt";
-        } else {
-            $queryStr = "SELECT $wpdb->posts.*, MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' IN NATURAL LANGUAGE MODE) as score";
-        }
-        $queryStr .= "
-                    FROM $wpdb->posts";
-        $queryStr .= "
-                    WHERE 1 ";
-        $queryStr .= " AND (";
-        $queryStr .= "$wpdb->posts.post_status = 'publish' OR $wpdb->posts.post_status = 'private'";
-        if (in_array('attachment', $postTypes)) {
-            $queryStr .= " OR $wpdb->posts.post_status = 'inherit'";
-        }
-        $queryStr .= ")";
-        if (!empty($postTypes)) {
+        if ($searchText) {
+            // Search for longer sentences
+            $searchText = '*' . $searchText . '*';
+
+            if ($action == 'COUNT') {
+                $queryStr = "SELECT COUNT(*) as cpt";
+            } else {
+                $queryStr = "SELECT $wpdb->posts.*, MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' IN BOOLEAN MODE) as score";
+            }
             $queryStr .= "
+                    FROM $wpdb->posts";
+            $queryStr .= "
+                    WHERE 1 ";
+            $queryStr .= " AND (";
+            $queryStr .= "$wpdb->posts.post_status = 'publish' OR $wpdb->posts.post_status = 'private'";
+            if (in_array('attachment', $postTypes)) {
+                $queryStr .= " OR $wpdb->posts.post_status = 'inherit'";
+            }
+            $queryStr .= ")";
+            if (!empty($postTypes)) {
+                $queryStr .= "
                     AND $wpdb->posts.post_type IN ('" . implode(',', $postTypes) . "')
             ";
-        }
+            }
 
-        $queryStr .= "
-        AND MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' IN NATURAL LANGUAGE MODE)";
-
-        /*$queryStr .= "
-                    GROUP BY ID
-                    HAVING (searchtext LIKE '%$searchText%')
-                    ORDER BY $wpdb->posts.post_date DESC
-                ";*/
-
-        /*if ($action == 'COUNT') {
-            $queryStr .= ') as searchView';
-        }*/
-
-        if ($action == 'SELECT') {
             $queryStr .= "
+        AND MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' IN BOOLEAN MODE)";
+
+            if ($action == 'SELECT') {
+                $queryStr .= "
             ORDER BY score DESC";
+            }
         }
 
         return $queryStr;
@@ -137,7 +133,7 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
 
         $res->setTitle($post->post_title);
         $res->setThumb(Medias::getFeaturedImage($post));
-        $res->setContent(apply_filters('the_content',$post->post_content));
+        $res->setContent($post->post_excerpt.''.apply_filters('the_content',$post->post_content));
         $post->filter = 'sample';
         $res->setLink(get_permalink($post));
 

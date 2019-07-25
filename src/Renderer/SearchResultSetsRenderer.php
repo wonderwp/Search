@@ -139,11 +139,18 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
         return apply_filters('wwp.search.noresult', 'No result');
     }
 
+    /**
+     * @param $content
+     * @param $query
+     * @return mixed|string
+     */
     protected function getMeaningFulContent($content, $query)
     {
+        $text = str_replace(["\r\n", "\r"], " ", strip_tags($content));
+        $text_without_accent = $this->removeAccents($text);
+        $query_without_accent = $this->removeAccents($query);
+        $testpos = !empty($query) ? mb_stripos($text_without_accent, $query_without_accent) : 0;
 
-        $text    = str_replace(["\r\n", "\r"], " ", strip_tags($content));
-        $testpos = !empty($query) ? strpos(strtolower($text), strtolower($query)) : 0;
         $size    = 140;
         $half    = ceil($size / 2);
         $mindif  = $testpos - $half;
@@ -169,7 +176,6 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
             $text = '';
         }
 
-        //$text = str_ireplace($query, '<span class="match">' . $query . '</span>', $text, $c2);
         $text = $this->highlightSearchTerm($text, $query);
 
         return $text;
@@ -186,17 +192,23 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
      */
     protected function highlightSearchTerm($text, $search)
     {
-
-        $delim  = '#';
-        $search = preg_quote($search, $delim);
-
-        $search = preg_replace('/[aàáâãåäæ]/iu', '[aàáâãåäæ]', $search);
-        $search = preg_replace('/[eèéêë]/iu', '[eèéêë]', $search);
-        $search = preg_replace('/[iìíîï]/iu', '[iìíîï]', $search);
-        $search = preg_replace('/[oòóôõöø]/iu', '[oòóôõöø]', $search);
-        $search = preg_replace('/[uùúûü]/iu', '[uùúûü]', $search);
-
         return preg_replace('#' . $search . '#iu', '<span class="match">$0</span>', $text);
-        //return $text = str_ireplace($search, '<span class="match">' . $search . '</span>', $text, $c2);
+    }
+
+    /**
+     * @param $text
+     * @return string
+     */
+    protected function removeAccents($text)
+    {
+        $transform = ['Š'=>'S', 'š'=>'s', 'Ž'=>'Z', 'ž'=>'z', 'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A',
+            'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E', 'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I',
+            'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O', 'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U', 'Ú'=>'U',
+            'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss', 'à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a',
+            'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e', 'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i',
+            'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o', 'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u',
+            'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'þ'=>'b', 'ÿ'=>'y'];
+
+        return strtr($text, $transform);
     }
 }
