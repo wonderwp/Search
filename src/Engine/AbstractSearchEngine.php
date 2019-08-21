@@ -16,13 +16,13 @@ abstract class AbstractSearchEngine implements SearchEngineInterface
      */
     protected $results = [];
 
-    /** @inheritdoc*/
+    /** @inheritdoc */
     public function getServices()
     {
         return $this->services;
     }
 
-    /** @inheritdoc*/
+    /** @inheritdoc */
     public function setServices(array $services)
     {
         foreach ($services as $service) {
@@ -32,7 +32,7 @@ abstract class AbstractSearchEngine implements SearchEngineInterface
         return $this;
     }
 
-    /** @inheritdoc*/
+    /** @inheritdoc */
     public function addService(SearchServiceInterface $service)
     {
         $this->services[$service->getName()] = $service;
@@ -40,27 +40,30 @@ abstract class AbstractSearchEngine implements SearchEngineInterface
         return $this;
     }
 
-    /** @inheritdoc*/
+    /** @inheritdoc */
     public function renderResults($query, array $opts = [], array $servicesNames = [])
     {
-
-        if (!empty($this->services)) {
-            if (count($servicesNames) > 0) {
-                foreach ($servicesNames as $serviceName) {
-                    foreach ($this->services as $searchService) {
-                        if ($serviceName === $searchService->getName()) {
-                            $this->results[] = $searchService->getMarkup($query, $opts);
-                            break;
+        if ($query) {
+            if (!empty($this->services)) {
+                if (count($servicesNames) > 0) {
+                    foreach ($servicesNames as $serviceName) {
+                        foreach ($this->services as $searchService) {
+                            if ($serviceName === $searchService->getName()) {
+                                $this->results[] = $searchService->getMarkup($query, $opts);
+                                break;
+                            }
                         }
                     }
-                }
-            } else {
-                foreach ($this->services as $searchService) {
-                    $this->results[] = $searchService->getMarkup($query, $opts);
+                } else {
+                    foreach ($this->services as $searchService) {
+                        $this->results[] = $searchService->getMarkup($query, $opts);
+                    }
                 }
             }
-        }
 
-        return implode('', $this->results);
+            $results = implode('', $this->results);
+
+            return apply_filters('search.engine.render.results', $query, $results);
+        }
     }
 }
