@@ -63,7 +63,7 @@ abstract class AbstractSearchEngine implements SearchEngineInterface
 
             $results = implode('', $this->results);
 
-            return apply_filters('search.engine.render.results', $query, $results);
+            return apply_filters('search.engine.render.results', $results, $query);
         }
     }
 }
