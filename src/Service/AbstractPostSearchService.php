@@ -28,6 +28,7 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
         $this->wpdb = $wpdb;
     }
 
+    /** @inheritDoc */
     protected function giveSetName()
     {
         return static::POST_TYPE . '-set';
@@ -76,6 +77,13 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
         return $this->computeQueryFromBuilder($queryBuilder);
     }
 
+    /**
+     * @param string $searchText
+     * @param array  $postTypes
+     * @param string $action
+     *
+     * @return array
+     */
     protected function getQueryBuilder($searchText, $postTypes = [], $action = "SELECT")
     {
         global $wpdb;
@@ -90,14 +98,26 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
             // Search for longer sentences
             $searchText = '*' . trim($searchText, '*') . '*';
 
+            /**
+             * SELECT
+             */
             if ($action == 'COUNT') {
                 $query['select'][] = "COUNT(*) as cpt";
             } else {
                 $query['select'][] = "$wpdb->posts.*";
                 $query['select'][] = "MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' " . self::SEARCH_MODIFIER . ") as score";
             }
+
+            /**
+             * FROM
+             */
             $query['from'][] = "$wpdb->posts";
 
+            /**
+             * WHERE
+             */
+
+            //Post status
             $searchablePostStatus = ['publish', 'private'];
             if (in_array('attachment', $postTypes)) {
                 $searchablePostStatus[] = 'inherit';
@@ -107,13 +127,17 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
                 $query['where'][] = "AND $wpdb->posts.post_status IN ('" . implode("','", $searchablePostStatus) . "')";
             }
 
+            //Post types
             if (!empty($postTypes)) {
-                $query['where'][] = "AND $wpdb->posts.post_type IN ('" . implode(',', $postTypes) . "')
-            ";
+                $query['where'][] = "AND $wpdb->posts.post_type IN ('" . implode(',', $postTypes) . "')";
             }
 
+            //Query matching
             $query['where'][] = "AND MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' " . self::SEARCH_MODIFIER . ")";
 
+            /**
+             * ORDER BY
+             */
             if ($action == 'SELECT') {
                 $query['orderby'][] = "score DESC";
             }
@@ -123,6 +147,13 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
         return apply_filters('AbstractPostSearchService.query', $query, $searchText, $postTypes, $action);
     }
 
+    /**
+     * Turn Query array into the actual SQL query
+     *
+     * @param array $query
+     *
+     * @return string
+     */
     protected function computeQueryFromBuilder(array $query)
     {
         $queryStr =
@@ -138,6 +169,9 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
         return $queryStr;
     }
 
+    /**
+     * @return []
+     */
     protected function getIndexedFields()
     {
         return [
