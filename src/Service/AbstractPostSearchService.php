@@ -9,7 +9,7 @@ use WonderWp\Component\Search\Result\SearchResultInterface;
 
 abstract class AbstractPostSearchService extends AbstractSetSearchService
 {
-    const POST_TYPE = 'post';
+    const POST_TYPE       = 'post';
     const SEARCH_MODIFIER = 'IN BOOLEAN MODE';
 
     /**
@@ -28,6 +28,7 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
         $this->wpdb = $wpdb;
     }
 
+    /** @inheritDoc */
     protected function giveSetName()
     {
         return static::POST_TYPE . '-set';
@@ -38,7 +39,7 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
     {
 
         $queryStr = $this->getQuerySql($query, [static::POST_TYPE], 'COUNT');
-        $res = $this->wpdb->get_results($queryStr);
+        $res      = $this->wpdb->get_results($queryStr);
 
         return !empty($res) && !empty($res[0]) && !empty($res[0]->cpt) ? $res[0]->cpt : 0;
     }
@@ -48,9 +49,9 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
     {
 
         $resCollection = [];
-        $queryStr = $this->getQuerySql($query, [static::POST_TYPE], 'SELECT');
-        $queryStr .= ' LIMIT ' . $opts['limit'] . ' OFFSET ' . $opts['offset'];
-        $dbCollection = $this->wpdb->get_results($queryStr);
+        $queryStr      = $this->getQuerySql($query, [static::POST_TYPE], 'SELECT');
+        $queryStr      .= ' LIMIT ' . $opts['limit'] . ' OFFSET ' . $opts['offset'];
+        $dbCollection  = $this->wpdb->get_results($queryStr);
         if (!empty($dbCollection)) {
             foreach ($dbCollection as $dbRow) {
                 $resCollection[] = $this->mapToRes($dbRow);
@@ -64,57 +65,113 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
      * Build sql query looking for a text in posts, for a given type and action.
      *
      * @param string $searchText
-     * @param array $postTypes
+     * @param array  $postTypes
      * @param string $action
      *
      * @return string
      */
     protected function getQuerySql($searchText, $postTypes = [], $action = "SELECT")
     {
+        $queryBuilder = $this->getQueryBuilder($searchText, $postTypes, $action);
+
+        return $this->computeQueryFromBuilder($queryBuilder);
+    }
+
+    /**
+     * @param string $searchText
+     * @param array  $postTypes
+     * @param string $action
+     *
+     * @return array
+     */
+    protected function getQueryBuilder($searchText, $postTypes = [], $action = "SELECT")
+    {
         global $wpdb;
-        $queryStr = NULL;
+        $query = [
+            'select'  => [],
+            'from'    => [],
+            'where'   => [1],
+            'orderby' => [],
+        ];
 
         if ($searchText) {
             // Search for longer sentences
             $searchText = '*' . trim($searchText, '*') . '*';
 
+            /**
+             * SELECT
+             */
             if ($action == 'COUNT') {
-                $queryStr = "SELECT COUNT(*) as cpt";
+                $query['select'][] = "COUNT(*) as cpt";
             } else {
-                $queryStr = "SELECT $wpdb->posts.*, MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' " . self::SEARCH_MODIFIER . ") as score";
+                $query['select'][] = "$wpdb->posts.*";
+                $query['select'][] = "MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' " . self::SEARCH_MODIFIER . ") as score";
             }
-            $queryStr .= "
-                    FROM $wpdb->posts";
-            $queryStr .= "
-                    WHERE 1 ";
 
+            /**
+             * FROM
+             */
+            $query['from'][] = "$wpdb->posts";
+
+            /**
+             * WHERE
+             */
+
+            //Post status
             $searchablePostStatus = ['publish', 'private'];
             if (in_array('attachment', $postTypes)) {
                 $searchablePostStatus[] = 'inherit';
             }
             $searchablePostStatus = apply_filters('wwp-search.post_search.searchable_post_status', $searchablePostStatus, $postTypes, $action);
             if (!empty($searchablePostStatus)) {
-                $queryStr .= " AND $wpdb->posts.post_status IN ('" . implode("','", $searchablePostStatus) . "')";
+                $query['where'][] = "AND $wpdb->posts.post_status IN ('" . implode("','", $searchablePostStatus) . "')";
             }
 
+            //Post types
             if (!empty($postTypes)) {
-                $queryStr .= "
-                    AND $wpdb->posts.post_type IN ('" . implode(',', $postTypes) . "')
-            ";
+                $query['where'][] = "AND $wpdb->posts.post_type IN ('" . implode(',', $postTypes) . "')";
             }
 
-            $queryStr .= "
-        AND MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' " . self::SEARCH_MODIFIER . ")";
+            //Query matching
+            $query['where'][] = "AND MATCH (" . implode(',', $this->getIndexedFields()) . ") AGAINST ('" . $searchText . "' " . self::SEARCH_MODIFIER . ")";
 
+            /**
+             * ORDER BY
+             */
             if ($action == 'SELECT') {
-                $queryStr .= "
-            ORDER BY score DESC";
+                $query['orderby'][] = "score DESC";
             }
+
+        }
+
+        return apply_filters('AbstractPostSearchService.query', $query, $searchText, $postTypes, $action);
+    }
+
+    /**
+     * Turn Query array into the actual SQL query
+     *
+     * @param array $query
+     *
+     * @return string
+     */
+    protected function computeQueryFromBuilder(array $query)
+    {
+        $queryStr =
+            'SELECT ' . implode(',', $query['select']) .
+            ' FROM ' . implode(' ', $query['from']);
+        if (!empty($query['where'])) {
+            $queryStr .= ' WHERE ' . implode(' ', $query['where']);
+        }
+        if (!empty($query['orderby'])) {
+            $queryStr .= ' ORDER BY ' . implode(',', $query['orderby']);
         }
 
         return $queryStr;
     }
 
+    /**
+     * @return []
+     */
     protected function getIndexedFields()
     {
         return [
