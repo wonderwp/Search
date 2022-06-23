@@ -68,6 +68,10 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
         $markup  = '';
         $results = $set->getCollection();
         if (!empty($results)) {
+            $class = '';
+            if(isset($opts['class'])){
+                $class = $opts['class'];
+            }
 
             $markup .=
                 '<div class="search-result-set search-result-set-' . (!empty($opts['view']) ? $opts['view'] : 'extrait') . ' search-result-set-' . sanitize_title($set->getName()) . '">
@@ -75,23 +79,10 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
                 '<span class="set-total">' . (int)$totalCount . '</span> ' .
                 '<span class="set-title">' . $set->getLabel() . '</span>
                 </div>
-                <ul class="set-results">';
+                <ul class="set-results ' . $class . '">';
 
             foreach ($results as $res) {
-                $markup .= '<li>';
-                if (!empty($res->getLink())) {
-                    $markup .= '<a href="' . $res->getLink() . '">';
-                }
-                $markup .= '<span class="res-title">' . $this->highlightSearchTerm($res->getTitle(), $query) . '</span>';
-
-                if (!empty($res->getContent())) {
-                    $markup .= '<div class="res-content">' . $this->getMeaningFulContent($res->getContent(), $query) . '</div>';
-                }
-
-                if (!empty($res->getLink())) {
-                    $markup .= '</a>';
-                }
-                $markup .= '</li>';
+                $markup .= $this->getSingleResultMarkup($res, $query);
             }
 
             $markup .= '
@@ -125,6 +116,28 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
                 '</div>';
 
         }
+
+        return $markup;
+    }
+
+    public function getSingleResultMarkup($res, $query){
+        $markup = '<li>';
+        if (method_exists($res, 'getLink') && !empty($res->getLink())) {
+            $markup .= '<a href="' . $res->getLink() . '">';
+        }
+
+        if(method_exists($res, 'getTitle')){
+            $markup .= '<span class="res-title">' . $this->highlightSearchTerm($res->getTitle(), $query) . '</span>';
+        }
+
+        if (method_exists($res, 'getContent') && !empty($res->getContent())) {
+            $markup .= '<div class="res-content">' . $this->getMeaningFulContent($res->getContent(), $query) . '</div>';
+        }
+
+        if (method_exists($res, 'getLink') && !empty($res->getLink())) {
+            $markup .= '</a>';
+        }
+        $markup .= '</li>';
 
         return $markup;
     }
