@@ -5,6 +5,7 @@ namespace WonderWp\Component\Search\Renderer;
 use WonderWp\Component\DependencyInjection\Container;
 use WonderWp\Component\Search\ResultSet\SearchResultSetInterface;
 use WonderWp\Theme\Core\Component\PaginationComponent;
+use WonderWp\Component\Search\Result\SearchResultInterface;
 
 class SearchResultSetsRenderer implements SearchResultsRendererInterface
 {
@@ -68,25 +69,13 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
         $markup  = '';
         $results = $set->getCollection();
         if (!empty($results)) {
-            $class = '';
-            if(isset($opts['class'])){
-                $class = $opts['class'];
-            }
-
-            $markup .=
-                '<div class="search-result-set search-result-set-' . (!empty($opts['view']) ? $opts['view'] : 'extrait') . ' search-result-set-' . sanitize_title($set->getName()) . '">
-                <div class="seat-head"> ' .
-                '<span class="set-total">' . (int)$totalCount . '</span> ' .
-                '<span class="set-title">' . $set->getLabel() . '</span>
-                </div>
-                <ul class="set-results ' . $class . '">';
+            $markup .= $this->getHeaderSingleResultMarkup($set, $totalCount, $opts);
 
             foreach ($results as $res) {
-                $markup .= $this->getSingleResultMarkup($res, $query);
+                $markup .= "<li>" . $this->getSingleResultMarkup($res, $query) . "</li>";
             }
 
-            $markup .= '
-                </ul>';
+            $markup .= $this->getFooterSingleResultMarkup();
 
             $isListView = isset($opts['view']) && $opts['view'] === 'list';
 
@@ -120,8 +109,30 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
         return $markup;
     }
 
-    public function getSingleResultMarkup($res, $query){
-        $markup = '<li>';
+    public function getHeaderSingleResultMarkup(SearchResultSetInterface $set, $totalCount, array $opts = []){
+        $markup = '';
+        $class = '';
+        if(isset($opts['class'])){
+            $class = $opts['class'];
+        }
+
+        $markup .=
+            '<div class="search-result-set search-result-set-' . (!empty($opts['view']) ? $opts['view'] : 'extrait') . ' search-result-set-' . sanitize_title($set->getName()) . '">
+                <div class="seat-head"> ' .
+            '<span class="set-total">' . (int)$totalCount . '</span> ' .
+            '<span class="set-title">' . $set->getLabel() . '</span>
+                </div>
+                <ul class="set-results ' . $class . '">';
+
+        return $markup;
+    }
+
+    public function getFooterSingleResultMarkup(){
+        return '</ul>';
+    }
+
+    public function getSingleResultMarkup(SearchResultInterface $res, $query){
+        $markup = '';
         if (method_exists($res, 'getLink') && !empty($res->getLink())) {
             $markup .= '<a href="' . $res->getLink() . '">';
         }
@@ -137,7 +148,6 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
         if (method_exists($res, 'getLink') && !empty($res->getLink())) {
             $markup .= '</a>';
         }
-        $markup .= '</li>';
 
         return $markup;
     }
