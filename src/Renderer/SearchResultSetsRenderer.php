@@ -133,7 +133,7 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
     }
 
     public function getBackButtonMarkup(string $search){
-        return '<a href="/?s=' . $search . '" class="search-go-back">' . __('back.to.results', WWP_SEARCH_TEXTDOMAIN) . '</a>';;
+        return '<a href="/?s=' . $search . '" class="search-go-back">' . __('back.to.results', WWP_THEME_TEXTDOMAIN) . '</a>';;
     }
 
     public function getFooterSingleResultMarkup(){
