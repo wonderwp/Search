@@ -69,14 +69,6 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
         $markup  = '';
         $results = $set->getCollection();
         if (!empty($results)) {
-            $markup .= $this->getHeaderSingleResultMarkup($set, $totalCount, $opts);
-
-            foreach ($results as $res) {
-                $markup .= "<li>" . $this->getSingleResultMarkup($res, $query) . "</li>";
-            }
-
-            $markup .= $this->getFooterSingleResultMarkup();
-
             $isListView = isset($opts['view']) && $opts['view'] === 'list';
 
             $baseQueryComponents = [
@@ -84,6 +76,18 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
                 't' => $opts['search_service'],
                 'v' => 'list',
             ];
+
+            if ($isListView) {
+                $markup .= '<a href="/?s=' . $baseQueryComponents['s'] . '" class="search-go-back">' . __('back.to.results', WWP_THEME_TEXTDOMAIN) . '</a>';
+            }
+
+            $markup .= $this->getHeaderSingleResultMarkup($set, $totalCount, $opts);
+
+            foreach ($results as $res) {
+                $markup .= "<li>" . $this->getSingleResultMarkup($res, $query) . "</li>";
+            }
+
+            $markup .= $this->getFooterSingleResultMarkup();
 
             if ($isListView) {
                 $container           = Container::getInstance();
@@ -95,9 +99,10 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
                     'paginationUrl' => '/?' . http_build_query($baseQueryComponents + ['pageno' => '{pageno}']),
                     'currentPage'   => $opts['page'],
                 ]);
+                $markup .= '<a href="/?' . http_build_query($baseQueryComponents) . '" class="search-go-back">' . __('back.to.results', WWP_THEME_TEXTDOMAIN) . '</a>';
             } else {
                 if (!isset($opts['limit']) || (isset($opts['limit']) && $totalCount > $opts['limit'])) {
-                    $markup .= '<a href="/?' . http_build_query($baseQueryComponents) . '" class="search-all-res-in-cat">' . __('see.all.results', WWP_THEME_TEXTDOMAIN) . '</a>';
+                    $markup .= '<a href="/?s=' . $baseQueryComponents['s'] . '" class="search-all-res-in-cat">' . __('see.all.results', WWP_THEME_TEXTDOMAIN) . '</a>';
                 }
             }
 
