@@ -78,7 +78,7 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
             ];
 
             if ($isListView) {
-                $markup .= '<a href="/?s=' . $baseQueryComponents['s'] . '" class="search-go-back">' . __('back.to.results', WWP_THEME_TEXTDOMAIN) . '</a>';
+                $markup .= $this->getBackButtonMarkup($baseQueryComponents['s']);
             }
 
             $markup .= $this->getHeaderSingleResultMarkup($set, $totalCount, $opts);
@@ -99,10 +99,10 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
                     'paginationUrl' => '/?' . http_build_query($baseQueryComponents + ['pageno' => '{pageno}']),
                     'currentPage'   => $opts['page'],
                 ]);
-                $markup .= '<a href="/?' . http_build_query($baseQueryComponents) . '" class="search-go-back">' . __('back.to.results', WWP_THEME_TEXTDOMAIN) . '</a>';
+                $markup .= $this->getBackButtonMarkup($baseQueryComponents['s']);
             } else {
                 if (!isset($opts['limit']) || (isset($opts['limit']) && $totalCount > $opts['limit'])) {
-                    $markup .= '<a href="/?s=' . $baseQueryComponents['s'] . '" class="search-all-res-in-cat">' . __('see.all.results', WWP_THEME_TEXTDOMAIN) . '</a>';
+                    $markup .= '<a href="/?' . http_build_query($baseQueryComponents) . '" class="search-all-res-in-cat">' . __('see.all.results', WWP_THEME_TEXTDOMAIN) . '</a>';
                 }
             }
 
@@ -130,6 +130,10 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
                 <ul class="set-results ' . $class . '">';
 
         return $markup;
+    }
+
+    public function getBackButtonMarkup(string $search){
+        return '<a href="/?s=' . $search . '" class="search-go-back">' . __('back.to.results', WWP_SEARCH_TEXTDOMAIN) . '</a>';;
     }
 
     public function getFooterSingleResultMarkup(){
