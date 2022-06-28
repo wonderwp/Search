@@ -69,14 +69,6 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
         $markup  = '';
         $results = $set->getCollection();
         if (!empty($results)) {
-            $markup .= $this->getHeaderSingleResultMarkup($set, $totalCount, $opts);
-
-            foreach ($results as $res) {
-                $markup .= "<li>" . $this->getSingleResultMarkup($res, $query) . "</li>";
-            }
-
-            $markup .= $this->getFooterSingleResultMarkup();
-
             $isListView = isset($opts['view']) && $opts['view'] === 'list';
 
             $baseQueryComponents = [
@@ -84,6 +76,18 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
                 't' => $opts['search_service'],
                 'v' => 'list',
             ];
+
+            if ($isListView) {
+                $markup .= $this->getBackButtonMarkup($baseQueryComponents['s']);
+            }
+
+            $markup .= $this->getHeaderSingleResultMarkup($set, $totalCount, $opts);
+
+            foreach ($results as $res) {
+                $markup .= "<li>" . $this->getSingleResultMarkup($res, $query) . "</li>";
+            }
+
+            $markup .= $this->getFooterSingleResultMarkup();
 
             if ($isListView) {
                 $container           = Container::getInstance();
@@ -95,6 +99,7 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
                     'paginationUrl' => '/?' . http_build_query($baseQueryComponents + ['pageno' => '{pageno}']),
                     'currentPage'   => $opts['page'],
                 ]);
+                $markup .= $this->getBackButtonMarkup($baseQueryComponents['s']);
             } else {
                 if (!isset($opts['limit']) || (isset($opts['limit']) && $totalCount > $opts['limit'])) {
                     $markup .= '<a href="/?' . http_build_query($baseQueryComponents) . '" class="search-all-res-in-cat">' . __('see.all.results', WWP_THEME_TEXTDOMAIN) . '</a>';
@@ -125,6 +130,10 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
                 <ul class="set-results ' . $class . '">';
 
         return $markup;
+    }
+
+    public function getBackButtonMarkup(string $search){
+        return '<a href="/?s=' . $search . '" class="search-go-back">' . __('back.to.results', WWP_SEARCH_TEXTDOMAIN) . '</a>';;
     }
 
     public function getFooterSingleResultMarkup(){
