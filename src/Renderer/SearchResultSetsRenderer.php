@@ -51,6 +51,14 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
         return $markup;
     }
 
+    protected function buildBaseQuery($query, array $opts = []){
+        return [
+            's' => urlencode($query),
+            't' => $opts['search_service'],
+            'v' => 'list',
+        ];
+    }
+
     /**
      * @param SearchResultSetInterface $set
      * @param string                   $query
@@ -71,11 +79,7 @@ class SearchResultSetsRenderer implements SearchResultsRendererInterface
         if (!empty($results)) {
             $isListView = isset($opts['view']) && $opts['view'] === 'list';
 
-            $baseQueryComponents = [
-                's' => urlencode($query),
-                't' => $opts['search_service'],
-                'v' => 'list',
-            ];
+            $baseQueryComponents = $this->buildBaseQuery($query, $opts);
 
             if ($isListView) {
                 $markup .= $this->getBackButtonMarkup($baseQueryComponents['s']);
