@@ -20,7 +20,7 @@ abstract class AbstractPostSearchService extends AbstractSetSearchService
     /**
      * @inheritDoc
      */
-    public function __construct(AbstractManager $manager = null)
+    public function __construct(?AbstractManager $manager = null)
     {
         parent::__construct($manager);
 
