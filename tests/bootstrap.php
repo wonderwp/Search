@@ -20,6 +20,7 @@ if ($autoload === null) {
     exit(1);
 }
 
+require_once __DIR__ . '/stub-service-dependencies.php';
 require_once __DIR__ . '/stub-wordpress.php';
 require_once $autoload;
 require_once __DIR__ . '/Fixtures/SearchTestDoubles.php';
