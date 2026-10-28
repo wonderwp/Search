@@ -21,13 +21,21 @@
     "wonderwp/media": "dev-feature/php_8"
   },
   "require-dev": {
-    "johnpbloch/wordpress": "^7.0"
+    "phpunit/phpunit": "^12.0"
   },
   "autoload": {
     "psr-4": {"WonderWp\\Component\\Search\\": "src"},
     "exclude-from-classmap": [
       "/tests/"
     ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "WonderWp\\Component\\Search\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit --configuration phpunit.xml.dist"
   },
   "minimum-stability": "dev"
 }
