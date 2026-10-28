@@ -1,1 +1,0 @@
-{"version":1,"defects":[],"times":{"WonderWp\\Component\\Search\\Tests\\Unit\\AbstractPostSearchServiceTest::testSelectQueryIncludesFulltextMatchAndPostTypeFilter":0.001,"WonderWp\\Component\\Search\\Tests\\Unit\\AbstractPostSearchServiceTest::testGiveSetResultsAppendsLimitAndOffset":0}}
